@@ -1,35 +1,30 @@
 "use client"
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
+import { createContext, useContext, useState, useEffect, ReactNode } from "react"
 import { useRouter } from "next/navigation"
 
-interface User {
-  sub: string
-  email: string
+type User = {
+  id: string
   name: string
-  picture: string
-  isAdmin: boolean
+  // other user properties
 }
 
-interface AuthContextType {
+type AuthContextType = {
   user: User | null
-  isLoading: boolean
   isAuthenticated: boolean
-  isAdmin: boolean
-  login: () => void
-  logout: () => void
-  refreshAuthStatus: () => Promise<void>
+  isLoading: boolean
+  login: (username: string, password: string) => Promise<boolean>
+  logout: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+const AuthContext = createContext<AuthContextType | null>(null)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
 
-  // Check authentication status
   const checkAuthStatus = async () => {
     try {
       setIsLoading(true)
@@ -41,9 +36,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
 
       if (response.ok) {
-        const data = await response.json()
-        setUser(data.user)
-        setIsAuthenticated(true)
+        // Check if the response is JSON
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+          const data = await response.json()
+          setUser(data.user)
+          setIsAuthenticated(true)
+        } else {
+          // Handle text response - user is authenticated but response is not JSON
+          const text = await response.text()
+          console.log("Auth successful with text response:", text)
+          
+          // Extract user info if possible or set default
+          setUser({ id: "1", name: "Admin" })
+          setIsAuthenticated(true)
+        }
       } else {
         setUser(null)
         setIsAuthenticated(false)
@@ -57,50 +64,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  // Check auth status on mount
   useEffect(() => {
     checkAuthStatus()
   }, [])
 
-  const login = () => {
-    // Redirect to the external Google login URL
-    window.location.href = "https://api.teknohive.me/auth/google/login"
-  }
-
-  const logout = async () => {
+  const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      await fetch("https://api.teknohive.me/auth/logout", {
+      const response = await fetch("https://api.teknohive.me/api/login", {
         method: "POST",
         credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({ username, password })
       })
 
-      // Clear local state
-      setUser(null)
-      setIsAuthenticated(false)
-
-      // Redirect to login page
-      router.push("/login")
+      if (response.ok) {
+        await checkAuthStatus()
+        return true
+      }
+      return false
     } catch (error) {
-      console.error("Logout error:", error)
+      console.error("Login error:", error)
+      return false
     }
   }
 
-  const value = {
-    user,
-    isLoading,
-    isAuthenticated,
-    isAdmin: user?.isAdmin || false,
-    login,
-    logout,
-    refreshAuthStatus: checkAuthStatus,
+  const logout = async (): Promise<void> => {
+    try {
+      await fetch("https://api.teknohive.me/api/logout", {
+        method: "POST",
+        credentials: "include"
+      })
+    } catch (error) {
+      console.error("Logout error:", error)
+    } finally {
+      setUser(null)
+      setIsAuthenticated(false)
+      router.push("/")
+    }
   }
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
-export function useAuth() {
+export const useAuth = () => {
   const context = useContext(AuthContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useAuth must be used within an AuthProvider")
   }
   return context

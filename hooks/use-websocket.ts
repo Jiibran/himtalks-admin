@@ -1,58 +1,52 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-
-interface WebSocketMessage {
-  data: string
-  type: string
-  target: WebSocket
-}
+import { useState, useEffect, useRef } from "react"
 
 export function useWebSocket(url: string) {
   const [isConnected, setIsConnected] = useState(false)
-  const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null)
+  const [lastMessage, setLastMessage] = useState<any>(null)
   const webSocketRef = useRef<WebSocket | null>(null)
 
   useEffect(() => {
-    // Create WebSocket connection
-    const socket = new WebSocket(url)
-    webSocketRef.current = socket
+    if (!url) return;
+    
+    // Create WebSocket with credentials
+    const ws = new WebSocket(url)
+    webSocketRef.current = ws
 
-    // Connection opened
-    socket.addEventListener("open", () => {
+    ws.onopen = () => {
+      console.log("WebSocket connected")
       setIsConnected(true)
-      console.log("WebSocket connection established")
-    })
+    }
 
-    // Listen for messages
-    socket.addEventListener("message", (event) => {
-      const message = event as WebSocketMessage
-      setLastMessage(message)
-    })
-
-    // Connection closed
-    socket.addEventListener("close", () => {
-      setIsConnected(false)
-      console.log("WebSocket connection closed")
-    })
-
-    // Connection error
-    socket.addEventListener("error", (error) => {
-      console.error("WebSocket error:", error)
-    })
-
-    // Clean up on unmount
-    return () => {
-      if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
-        socket.close()
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        setLastMessage(data)
+      } catch (error) {
+        console.log("Received non-JSON message:", event.data)
+        setLastMessage(event.data)
       }
+    }
+
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error)
+    }
+
+    ws.onclose = () => {
+      console.log("WebSocket connection closed")
+      setIsConnected(false)
+    }
+
+    return () => {
+      ws.close()
     }
   }, [url])
 
   // Function to send messages
-  const sendMessage = (data: string | ArrayBufferLike | Blob | ArrayBufferView) => {
+  const sendMessage = (data: any) => {
     if (webSocketRef.current && webSocketRef.current.readyState === WebSocket.OPEN) {
-      webSocketRef.current.send(data)
+      webSocketRef.current.send(JSON.stringify(data))
     } else {
       console.error("WebSocket is not connected")
     }

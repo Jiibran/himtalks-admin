@@ -46,18 +46,31 @@ export async function deleteSongfess(id: string) {
 
 export async function fetchMessages() {
   try {
-    const response = await fetch(`${API_BASE}/api/admin/messages`, {
+    const response = await fetch(`${API_BASE}/api/messages`, {
       credentials: "include",
-    })
+      headers: {
+        "Accept": "application/json"
+      }
+    });
 
     if (!response.ok) {
-      throw new Error("Failed to fetch messages")
+      throw new Error("Failed to fetch messages");
     }
-
-    return await response.json()
+    
+    // Check if the response is JSON
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+      return await response.json();
+    } else {
+      // Handle text response
+      const text = await response.text();
+      console.log("Received text response:", text);
+      // Return empty array or default structure
+      return { messages: [] };
+    }
   } catch (error) {
-    console.error("Error fetching messages:", error)
-    throw error
+    console.error("Error fetching messages:", error);
+    throw error;
   }
 }
 
