@@ -1,8 +1,8 @@
 "use client"
 
+import { useRouter } from "next/navigation"
 import type { Songfess } from "@/types/songfess"
 import { Card, CardContent, CardDescription, CardFooter } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Music, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
@@ -19,11 +19,14 @@ interface SongfessListProps {
 
 export default function SongfessList({ songfess, onDelete }: SongfessListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const router = useRouter()
   const { isAuthenticated } = useAuth()
   const { toast } = useToast()
   const { showLoginModal } = useLoginModal()
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation() // Prevent navigation when clicking delete
+    
     if (!isAuthenticated) {
       showLoginModal()
       return
@@ -49,13 +52,21 @@ export default function SongfessList({ songfess, onDelete }: SongfessListProps) 
     }
   }
 
+  const goToDetails = (id: string) => {
+    router.push(`/songfess/${id}`)
+  }
+
   return (
     <div className="space-y-4">
       {songfess.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">No songfess found.</div>
       ) : (
         songfess.map((item) => (
-          <Card key={item.id} className="overflow-hidden">
+          <Card 
+            key={item.id} 
+            className="overflow-hidden hover:shadow-md transition cursor-pointer"
+            onClick={() => goToDetails(item.id.toString())}
+          >
             <CardContent className="p-4">
               <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-4">
@@ -85,35 +96,27 @@ export default function SongfessList({ songfess, onDelete }: SongfessListProps) 
               </div>
               
               <div className="mt-4 space-y-2">
-                <p className="text-sm">{item.content}</p>
+                <p className="text-sm line-clamp-2">{item.content}</p>
                 <p className="text-xs text-muted-foreground">
                   From: {item.sender_name || "Anonymous"} • To: {item.recipient_name || "Unknown"}
                 </p>
-                
-                {/* Spotify Embed */}
-                {item.song_id && (
-                  <div className="mt-3">
-                    <iframe
-                      src={`https://open.spotify.com/embed/track/${item.song_id}`}
-                      width="100%"
-                      height="80"
-                      frameBorder="0"
-                      allowTransparency={true}
-                      allow="encrypted-media"
-                      className="rounded"
-                    ></iframe>
-                  </div>
-                )}
               </div>
             </CardContent>
             
             <CardFooter className="bg-muted/50 p-2">
-              <div className="flex w-full justify-end">
+              <div className="flex w-full justify-between">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToDetails(item.id.toString())}
+                >
+                  View Details
+                </Button>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => handleDelete(item.id.toString())}
+                  onClick={(e) => handleDelete(e, item.id.toString())}
                   disabled={deletingId === item.id.toString()}
                 >
                   <Trash2 className="h-4 w-4 mr-1" />

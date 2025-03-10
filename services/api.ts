@@ -145,3 +145,35 @@ export async function fetchSongfess() {
   }
 }
 
+export async function fetchSongfessById(id: string) {
+  try {
+    const response = await fetch(`${API_BASE}/api/admin/songfess/${id}`, {
+      credentials: "include",
+      headers: {
+        "Accept": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      // If first endpoint fails, try the fallback endpoint
+      const fallbackResponse = await fetch(`${API_BASE}/api/admin/songfessAll/${id}`, {
+        credentials: "include",
+        headers: {
+          "Accept": "application/json"
+        }
+      });
+      
+      if (!fallbackResponse.ok) {
+        throw new Error("Failed to fetch songfess details");
+      }
+      
+      return await fallbackResponse.json();
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching songfess details:", error);
+    throw error;
+  }
+}
+
