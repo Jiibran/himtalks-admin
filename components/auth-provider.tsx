@@ -17,8 +17,9 @@ type AuthContextType = {
   isAuthenticated: boolean
   isLoading: boolean
   isAdmin: boolean
-  login: () => void // Changed to match how Google Auth works
+  login: () => void
   logout: () => Promise<void>
+  refreshAuthStatus: () => Promise<void> // Add this line
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -107,7 +108,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       isLoading, 
       isAdmin: user?.isAdmin || false,
       login, 
-      logout 
+      logout,
+      refreshAuthStatus: checkAuthStatus // Add this line to expose the function
     }}>
       {children}
     </AuthContext.Provider>

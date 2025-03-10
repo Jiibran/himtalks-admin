@@ -46,7 +46,7 @@ export async function deleteSongfess(id: string) {
 
 export async function fetchMessages() {
   try {
-    const response = await fetch(`${API_BASE}/api/messages`, {
+    const response = await fetch(`${API_BASE}/api/admin/messages`, {
       credentials: "include",
       headers: {
         "Accept": "application/json"
@@ -76,12 +76,30 @@ export async function fetchMessages() {
 
 export async function fetchSongfess() {
   try {
+    // First try the primary endpoint
     const response = await fetch(`${API_BASE}/api/admin/songfessAll`, {
       credentials: "include",
+      headers: {
+        "Accept": "application/json"
+      }
     })
 
     if (!response.ok) {
-      throw new Error("Failed to fetch songfess")
+      console.log("Primary songfess endpoint failed, trying fallback...")
+      
+      // If first endpoint fails, try the fallback endpoint
+      const fallbackResponse = await fetch(`${API_BASE}/api/admin/songfess`, {
+        credentials: "include",
+        headers: {
+          "Accept": "application/json"
+        }
+      })
+      
+      if (!fallbackResponse.ok) {
+        throw new Error("Failed to fetch songfess from both endpoints")
+      }
+      
+      return await fallbackResponse.json()
     }
 
     return await response.json()
