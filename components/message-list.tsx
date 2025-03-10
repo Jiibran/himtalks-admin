@@ -12,6 +12,24 @@ import { useAuth } from "@/components/auth-provider"
 import { useToast } from "@/hooks/use-toast"
 import { useLoginModal } from "@/hooks/use-login-modal"
 
+const formatSafeDate = (dateString: string | number | Date | null | undefined) => {
+  if (!dateString) return "Unknown time";
+  
+  try {
+    const date = typeof dateString === 'number'
+      ? new Date(dateString)
+      : new Date(String(dateString));
+      
+    if (isNaN(date.getTime())) {
+      return "Invalid date";
+    }
+    return formatDistanceToNow(date, { addSuffix: true });
+  } catch (error) {
+    console.error("Date formatting error:", error);
+    return "Invalid date";
+  }
+}
+
 interface MessageListProps {
   messages: Message[]
   onDelete: (id: string) => void
@@ -68,7 +86,7 @@ export default function MessageList({ messages, onDelete }: MessageListProps) {
                   <div className="flex items-center gap-2">
                     <h3 className="font-semibold">{message.sender}</h3>
                     <CardDescription>
-                      {formatDistanceToNow(new Date(message.timestamp), { addSuffix: true })}
+                      {formatSafeDate(message.timestamp)}
                     </CardDescription>
                   </div>
                   <Button

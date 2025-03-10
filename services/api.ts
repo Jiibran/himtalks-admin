@@ -62,13 +62,13 @@ export async function fetchMessages() {
     if (contentType && contentType.indexOf("application/json") !== -1) {
       const data = await response.json();
       
-      // Sanitize date fields if they exist
+      // More thorough sanitization of date fields
       if (Array.isArray(data)) {
         return data.map(item => ({
           ...item,
           // Set default values for missing timestamps and validate existing ones
-          createdAt: item.createdAt ? new Date(item.createdAt).getTime() ? item.createdAt : null : null,
-          updatedAt: item.updatedAt ? new Date(item.updatedAt).getTime() ? item.updatedAt : null : null,
+          createdAt: sanitizeDate(item.createdAt),
+          updatedAt: sanitizeDate(item.updatedAt),
         }));
       }
       
@@ -81,6 +81,30 @@ export async function fetchMessages() {
   } catch (error) {
     console.error("Error fetching messages:", error);
     return []; // Return empty array instead of throwing
+  }
+}
+
+// Helper function to sanitize dates
+function sanitizeDate(value: any): string | null {
+  if (!value) return null;
+  
+  try {
+    // For numeric timestamps
+    if (typeof value === 'number') {
+      const date = new Date(value);
+      return isNaN(date.getTime()) ? null : date.toISOString();
+    }
+    
+    // For string dates
+    if (typeof value === 'string') {
+      const date = new Date(value);
+      return isNaN(date.getTime()) ? null : date.toISOString();
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("Date sanitization error:", error);
+    return null;
   }
 }
 
