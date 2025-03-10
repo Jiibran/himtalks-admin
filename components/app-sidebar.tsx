@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { MessageSquare, Music, LayoutDashboard, LogOut, LogIn } from 'lucide-react'
+import { MessageSquare, Music, LayoutDashboard, LogOut, LogIn, Users, Settings as SettingsIcon } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   Sidebar,
@@ -88,6 +88,27 @@ export default function AppSidebar() {
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
+
+          {isAuthenticated && isAdmin && (
+            <>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/admin-list"}>
+                  <Link href="/admin-list" className="flex items-center gap-3">
+                    <Users className="h-5 w-5" />
+                    <span>Admin List</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={pathname === "/settings"}>
+                  <Link href="/settings" className="flex items-center gap-3">
+                    <SettingsIcon className="h-5 w-5" />
+                    <span>Settings</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </>
+          )}
         </SidebarMenu>
       </SidebarContent>
 
