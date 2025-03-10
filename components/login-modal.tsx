@@ -45,7 +45,7 @@ export function LoginModal({ isOpen, onClose, message = "Please sign in to conti
           </DialogDescription>
         </DialogHeader>
         
-        <Alert variant="warning" className="my-2">
+        <Alert variant="default" className="my-2">
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
             Only emails ending with @student.unsika.ac.id are allowed

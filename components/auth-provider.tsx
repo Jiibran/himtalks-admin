@@ -35,6 +35,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(true)
       const response = await fetch("https://api.teknohive.me/api/protected", {
         credentials: "include",
+        headers: {
+          "Accept": "application/json"
+        }
       })
 
       if (response.ok) {

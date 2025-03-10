@@ -46,7 +46,7 @@ export async function deleteSongfess(id: string) {
 
 export async function fetchMessages() {
   try {
-    const response = await fetch(`${API_BASE}/messages`, {
+    const response = await fetch(`${API_BASE}/api/admin/messages`, {
       credentials: "include",
     })
 
@@ -63,7 +63,7 @@ export async function fetchMessages() {
 
 export async function fetchSongfess() {
   try {
-    const response = await fetch(`${API_BASE}/songfess`, {
+    const response = await fetch(`${API_BASE}/api/admin/songfessAll`, {
       credentials: "include",
     })
 
