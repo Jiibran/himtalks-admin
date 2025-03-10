@@ -3,44 +3,46 @@ const API_BASE = "https://api.teknohive.me"
 export async function deleteMessage(id: string) {
   try {
     const res = await fetch(`${API_BASE}/api/admin/message/delete`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json'
       },
-      credentials: "include",
-      body: JSON.stringify({ id }),
-    })
-
+      credentials: 'include', // This ensures cookies are sent with the request
+      body: JSON.stringify({ id })
+    });
+    
     if (!res.ok) {
-      throw new Error(`Failed to delete message: ${res.status}`)
+      console.error(`Failed to delete message: ${res.status}`);
+      return false;
     }
-
-    return true
+    
+    return true;
   } catch (error) {
-    console.error("Error deleting message:", error)
-    throw error
+    console.error('Error deleting message:', error);
+    return false;
   }
 }
 
 export async function deleteSongfess(id: string) {
   try {
     const res = await fetch(`${API_BASE}/api/admin/songfess/delete`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json'
       },
-      credentials: "include",
-      body: JSON.stringify({ id }),
-    })
-
+      credentials: 'include', // This ensures cookies are sent with the request
+      body: JSON.stringify({ id })
+    });
+    
     if (!res.ok) {
-      throw new Error(`Failed to delete songfess: ${res.status}`)
+      console.error(`Failed to delete songfess: ${res.status}`);
+      return false;
     }
-
-    return true
+    
+    return true;
   } catch (error) {
-    console.error("Error deleting songfess:", error)
-    throw error
+    console.error('Error deleting songfess:', error);
+    return false;
   }
 }
 

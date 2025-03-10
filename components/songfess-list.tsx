@@ -89,6 +89,21 @@ export default function SongfessList({ songfess, onDelete }: SongfessListProps) 
                 <p className="text-xs text-muted-foreground">
                   From: {item.sender_name || "Anonymous"} • To: {item.recipient_name || "Unknown"}
                 </p>
+                
+                {/* Spotify Embed */}
+                {item.song_id && (
+                  <div className="mt-3">
+                    <iframe
+                      src={`https://open.spotify.com/embed/track/${item.song_id}`}
+                      width="100%"
+                      height="80"
+                      frameBorder="0"
+                      allowTransparency={true}
+                      allow="encrypted-media"
+                      className="rounded"
+                    ></iframe>
+                  </div>
+                )}
               </div>
             </CardContent>
             
