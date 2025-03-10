@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/components/auth-provider"
-import { Trash2, Settings, Clock, AlertTriangle, Plus } from "lucide-react"
+import { Trash2, Settings, Clock, AlertTriangle, Plus, InfoCircle } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -15,9 +15,18 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 // Updated interface to match API response
 type BlacklistedWords = string[]
 
+// Interface for configs
+interface ConfigsResponse {
+  configs: {
+    songfess_days: string;
+    [key: string]: string;
+  }
+}
+
 export default function SettingsPage() {
   const [blacklistedWords, setBlacklistedWords] = useState<BlacklistedWords>([])
   const [songfessDays, setSongfessDays] = useState<string>("")
+  const [currentSongfessDays, setCurrentSongfessDays] = useState<string>("")
   const [newWord, setNewWord] = useState("")
   const [loading, setLoading] = useState(true)
   const [loadingWords, setLoadingWords] = useState(true)
@@ -60,7 +69,7 @@ export default function SettingsPage() {
 
   const fetchSongfessDays = async () => {
     try {
-      const response = await fetch("https://api.teknohive.me/api/admin/configSongfessDays", {
+      const response = await fetch("https://api.teknohive.me/api/admin/configs", {
         credentials: "include",
         headers: {
           "Accept": "application/json"
@@ -68,13 +77,15 @@ export default function SettingsPage() {
       })
 
       if (!response.ok) {
-        throw new Error("Failed to fetch songfess days")
+        throw new Error("Failed to fetch configs")
       }
 
-      const data = await response.json()
-      setSongfessDays(data.days || "")
+      const data = await response.json() as ConfigsResponse
+      setCurrentSongfessDays(data.configs.songfess_days || "")
+      // Also set as default value for the input field
+      setSongfessDays(data.configs.songfess_days || "")
     } catch (error) {
-      console.error("Error fetching songfess days:", error)
+      console.error("Error fetching songfess configs:", error)
     }
   }
 
@@ -207,6 +218,9 @@ export default function SettingsPage() {
         title: "Success",
         description: "Songfess days limit updated successfully"
       })
+      
+      // Refresh the current config
+      await fetchSongfessDays()
     } catch (error) {
       console.error("Error updating songfess days:", error)
       toast({
@@ -268,6 +282,17 @@ export default function SettingsPage() {
                   <CardDescription>Set the number of days songfess will be available</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {/* Display current setting */}
+                  <div className="mb-4 p-3 bg-muted/50 rounded-md flex items-center">
+                    <InfoCircle className="h-5 w-5 mr-2 text-blue-500" />
+                    <div>
+                      <p className="text-sm font-medium">Current setting:</p>
+                      <p className="text-lg font-bold">
+                        {currentSongfessDays ? `${currentSongfessDays} days` : "Not configured"}
+                      </p>
+                    </div>
+                  </div>
+                  
                   <form onSubmit={handleUpdateSongfessDays} className="flex flex-col sm:flex-row gap-2">
                     <Input
                       type="number"
