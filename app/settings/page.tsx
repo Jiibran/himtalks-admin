@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/components/auth-provider"
-import { Trash2, Settings, Clock, AlertTriangle, Plus, InfoCircle } from "lucide-react"
+import { Trash2, Settings, Clock, AlertTriangle, Plus, Info } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -15,12 +15,11 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 // Updated interface to match API response
 type BlacklistedWords = string[]
 
-// Interface for configs
+// Update the interface to match the actual API response format
 interface ConfigsResponse {
-  configs: {
-    songfess_days: string;
-    [key: string]: string;
-  }
+  songfess_days: string;
+  message_char_limit: string;
+  [key: string]: string;
 }
 
 export default function SettingsPage() {
@@ -67,6 +66,7 @@ export default function SettingsPage() {
     }
   }
 
+  // Then update the fetchSongfessDays function
   const fetchSongfessDays = async () => {
     try {
       const response = await fetch("https://api.teknohive.me/api/admin/configs", {
@@ -81,9 +81,9 @@ export default function SettingsPage() {
       }
 
       const data = await response.json() as ConfigsResponse
-      setCurrentSongfessDays(data.configs.songfess_days || "")
-      // Also set as default value for the input field
-      setSongfessDays(data.configs.songfess_days || "")
+      // No longer nested under configs object
+      setCurrentSongfessDays(data.songfess_days || "")
+      setSongfessDays(data.songfess_days || "")
     } catch (error) {
       console.error("Error fetching songfess configs:", error)
     }
@@ -284,7 +284,7 @@ export default function SettingsPage() {
                 <CardContent>
                   {/* Display current setting */}
                   <div className="mb-4 p-3 bg-muted/50 rounded-md flex items-center">
-                    <InfoCircle className="h-5 w-5 mr-2 text-blue-500" />
+                    <Info className="h-5 w-5 mr-2 text-blue-500" />
                     <div>
                       <p className="text-sm font-medium">Current setting:</p>
                       <p className="text-lg font-bold">
