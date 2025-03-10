@@ -7,23 +7,22 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/components/auth-provider"
-import { Trash2 } from "lucide-react"
+import { Trash2, UserPlus, Users } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 
-interface Admin {
-  id: string;
-  email: string;
-}
+// Updated type to match API response
+type AdminList = string[]
 
 export default function AdminListPage() {
-  const [admins, setAdmins] = useState<Admin[]>([])
+  const [admins, setAdmins] = useState<AdminList>([])
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(true)
   const [addingAdmin, setAddingAdmin] = useState(false)
-  const [removingAdminId, setRemovingAdminId] = useState<string | null>(null)
+  const [removingAdmin, setRemovingAdmin] = useState<string | null>(null)
   
   const router = useRouter()
   const { toast } = useToast()
-  const { isAuthenticated, isAdmin } = useAuth()
+  const { isAuthenticated, isAdmin, isLoading } = useAuth()
 
   const fetchAdmins = async () => {
     try {
@@ -59,7 +58,7 @@ export default function AdminListPage() {
     } else if (!isLoading && (!isAuthenticated || !isAdmin)) {
       router.push("/")
     }
-  }, [isAuthenticated, isAdmin, router])
+  }, [isAuthenticated, isAdmin, router, isLoading])
 
   const handleAddAdmin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -107,16 +106,16 @@ export default function AdminListPage() {
     }
   }
 
-  const handleRemoveAdmin = async (adminId: string) => {
+  const handleRemoveAdmin = async (adminEmail: string) => {
     try {
-      setRemovingAdminId(adminId)
+      setRemovingAdmin(adminEmail)
       const response = await fetch("https://api.teknohive.me/api/admin/removeAdmin", {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ id: adminId })
+        body: JSON.stringify({ email: adminEmail })
       })
 
       if (!response.ok) {
@@ -138,19 +137,22 @@ export default function AdminListPage() {
         variant: "destructive"
       })
     } finally {
-      setRemovingAdminId(null)
+      setRemovingAdmin(null)
     }
   }
 
   return (
-    <div className="container py-6">
-      <Card>
+    <div className="container py-4 md:py-6">
+      <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle>Admin Management</CardTitle>
+          <CardTitle className="text-xl md:text-2xl flex items-center gap-2">
+            <Users className="h-5 w-5 md:h-6 md:w-6" />
+            Admin Management
+          </CardTitle>
           <CardDescription>Add or remove admin users</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleAddAdmin} className="flex gap-2 mb-6">
+          <form onSubmit={handleAddAdmin} className="flex flex-col sm:flex-row gap-2 mb-6">
             <Input
               type="email"
               placeholder="Email address"
@@ -158,32 +160,47 @@ export default function AdminListPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="flex-1"
             />
-            <Button type="submit" disabled={addingAdmin}>
+            <Button 
+              type="submit" 
+              disabled={addingAdmin}
+              className="w-full sm:w-auto"
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
               {addingAdmin ? "Adding..." : "Add Admin"}
             </Button>
           </form>
 
           {loading ? (
-            <div className="text-center py-4">Loading admins...</div>
+            <div className="space-y-2">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-muted/50 rounded-md">
+                  <Skeleton className="h-6 w-48" />
+                  <Skeleton className="h-9 w-20" />
+                </div>
+              ))}
+            </div>
           ) : admins.length === 0 ? (
-            <div className="text-center py-4 text-muted-foreground">No admins found.</div>
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <Users className="h-12 w-12 mb-2 opacity-50" />
+              <p>No admins found.</p>
+            </div>
           ) : (
             <div className="space-y-2">
-              {admins.map((admin) => (
+              {admins.map((adminEmail, index) => (
                 <div
-                  key={admin.id}
-                  className="flex items-center justify-between p-3 bg-muted/50 rounded-md"
+                  key={index}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-muted/50 rounded-md gap-2"
                 >
-                  <div className="font-medium">{admin.email}</div>
+                  <div className="font-medium break-words">{adminEmail}</div>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => handleRemoveAdmin(admin.id)}
-                    disabled={removingAdminId === admin.id}
+                    className="text-red-500 hover:text-red-700 hover:bg-red-50 self-end sm:self-auto"
+                    onClick={() => handleRemoveAdmin(adminEmail)}
+                    disabled={removingAdmin === adminEmail}
                   >
                     <Trash2 className="h-4 w-4 mr-1" />
-                    {removingAdminId === admin.id ? "Removing..." : "Remove"}
+                    {removingAdmin === adminEmail ? "Removing..." : "Remove"}
                   </Button>
                 </div>
               ))}
