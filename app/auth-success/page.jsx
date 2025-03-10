@@ -6,23 +6,23 @@ import { useAuth } from "@/components/auth-provider"
 
 export default function AuthSuccessPage() {
   const router = useRouter()
-  const { refreshAuthStatus } = useAuth()
+  const { isAuthenticated, isLoading } = useAuth()
 
   useEffect(() => {
-    const handleAuthSuccess = async () => {
-      // Refresh auth status to get the user info from the cookie
-      await refreshAuthStatus()
-      
-      // Redirect to the messages page
-      router.push("/messages")
+    if (!isLoading) {
+      if (isAuthenticated) {
+        // Redirect to main application page
+        router.push("/messages")
+      } else {
+        // Auth failed, redirect to login
+        router.push("/login")
+      }
     }
-
-    handleAuthSuccess()
-  }, [router, refreshAuthStatus])
+  }, [isLoading, isAuthenticated, router])
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <p className="text-lg">Authentication successful. Redirecting...</p>
+      <p className="text-lg">Processing authentication... Please wait.</p>
     </div>
   )
 }

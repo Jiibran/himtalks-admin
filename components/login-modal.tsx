@@ -27,12 +27,9 @@ export function LoginModal({ isOpen, onClose, message = "Please sign in to conti
 
   const handleGoogleLogin = () => {
     setIsLoading(true)
-    try {
-      login()
-    } catch (error) {
-      console.error("Login error:", error)
-      setIsLoading(false)
-    }
+    // Simply call login which will redirect to Google auth
+    login()
+    // No need to catch errors or set isLoading to false as we're redirecting away
   }
 
   return (

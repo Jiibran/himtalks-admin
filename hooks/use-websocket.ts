@@ -8,39 +8,45 @@ export function useWebSocket(url: string) {
   const webSocketRef = useRef<WebSocket | null>(null)
 
   useEffect(() => {
-    if (!url) return;
-    
-    // Create WebSocket with credentials
-    const ws = new WebSocket(url)
-    webSocketRef.current = ws
+    // Add a small delay to make sure authentication is completed first
+    const timer = setTimeout(() => {
+      if (!url) return;
+      
+      // Create WebSocket connection
+      const ws = new WebSocket(url);
+      webSocketRef.current = ws
 
-    ws.onopen = () => {
-      console.log("WebSocket connected")
-      setIsConnected(true)
-    }
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data)
-        setLastMessage(data)
-      } catch (error) {
-        console.log("Received non-JSON message:", event.data)
-        setLastMessage(event.data)
+      ws.onopen = () => {
+        console.log("WebSocket connected")
+        setIsConnected(true)
       }
-    }
 
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error)
-    }
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          setLastMessage(data)
+        } catch (error) {
+          console.log("Received non-JSON message:", event.data)
+          setLastMessage(event.data)
+        }
+      }
 
-    ws.onclose = () => {
-      console.log("WebSocket connection closed")
-      setIsConnected(false)
-    }
+      ws.onerror = (error) => {
+        console.error("WebSocket error:", error)
+      }
 
+      ws.onclose = () => {
+        console.log("WebSocket connection closed")
+        setIsConnected(false)
+      }
+    }, 1000);
+    
     return () => {
-      ws.close()
-    }
+      clearTimeout(timer);
+      if (webSocketRef.current) {
+        webSocketRef.current.close();
+      }
+    };
   }, [url])
 
   // Function to send messages

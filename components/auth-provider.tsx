@@ -6,6 +6,9 @@ import { useRouter } from "next/navigation"
 type User = {
   id: string
   name: string
+  email?: string
+  picture?: string
+  isAdmin?: boolean
   // other user properties
 }
 
@@ -13,7 +16,8 @@ type AuthContextType = {
   user: User | null
   isAuthenticated: boolean
   isLoading: boolean
-  login: (username: string, password: string) => Promise<boolean>
+  isAdmin: boolean
+  login: () => void // Changed to match how Google Auth works
   logout: () => Promise<void>
 }
 
@@ -47,8 +51,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const text = await response.text()
           console.log("Auth successful with text response:", text)
           
-          // Extract user info if possible or set default
-          setUser({ id: "1", name: "Admin" })
+          // Try to extract user info or set default
+          // If the text starts with "Welcome, " followed by a name, try to extract it
+          let name = "Admin"
+          const welcomeMatch = text.match(/Welcome,\s+(\w+)/i)
+          if (welcomeMatch && welcomeMatch[1]) {
+            name = welcomeMatch[1]
+          }
+          
+          setUser({ id: "1", name })
           setIsAuthenticated(true)
         }
       } else {
@@ -68,27 +79,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     checkAuthStatus()
   }, [])
 
-  const login = async (username: string, password: string): Promise<boolean> => {
-    try {
-      const response = await fetch("https://api.teknohive.me/auth/google/login", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify({ username, password })
-      })
-
-      if (response.ok) {
-        await checkAuthStatus()
-        return true
-      }
-      return false
-    } catch (error) {
-      console.error("Login error:", error)
-      return false
-    }
+  // Modified to use redirection for Google OAuth
+  const login = () => {
+    // Redirect to the Google OAuth endpoint
+    window.location.href = "https://api.teknohive.me/auth/google/login"
   }
 
   const logout = async (): Promise<void> => {
@@ -107,7 +101,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      isAuthenticated, 
+      isLoading, 
+      isAdmin: user?.isAdmin || false,
+      login, 
+      logout 
+    }}>
       {children}
     </AuthContext.Provider>
   )
