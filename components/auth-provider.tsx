@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (username: string, password: string): Promise<boolean> => {
     try {
-      const response = await fetch("https://api.teknohive.me/api/login", {
+      const response = await fetch("https://api.teknohive.me/auth/google/login", {
         method: "POST",
         credentials: "include",
         headers: {
@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async (): Promise<void> => {
     try {
-      await fetch("https://api.teknohive.me/api/logout", {
+      await fetch("https://api.teknohive.me/auth/logout", {
         method: "POST",
         credentials: "include"
       })
