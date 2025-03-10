@@ -147,21 +147,21 @@ export async function fetchSongfess() {
 
 export async function fetchSongfessById(id: string) {
   try {
-    const response = await fetch(`${API_BASE}/api/admin/songfess/${id}`, {
+    const response = await fetch(`${API_BASE}/api/songfess/${id}`, {
       credentials: "include",
       headers: {
         "Accept": "application/json"
       }
     });
 
-    if (!response.ok) {
-      // If first endpoint fails, try the fallback endpoint
-      const fallbackResponse = await fetch(`${API_BASE}/api/admin/songfessAll/${id}`, {
-        credentials: "include",
-        headers: {
-          "Accept": "application/json"
-        }
-      });
+    // if (!response.ok) {
+    //   // If first endpoint fails, try the fallback endpoint
+    //   const fallbackResponse = await fetch(`${API_BASE}/api/admin/songfessAll/${id}`, {
+    //     credentials: "include",
+    //     headers: {
+    //       "Accept": "application/json"
+    //     }
+    //   });
       
       if (!fallbackResponse.ok) {
         throw new Error("Failed to fetch songfess details");
