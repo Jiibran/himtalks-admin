@@ -33,7 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const checkAuthStatus = async () => {
     try {
       setIsLoading(true)
-      const response = await fetch("https://api.teknohive.me/auth/status", {
+      const response = await fetch("https://api.teknohive.me/api/protected", {
         credentials: "include",
       })
 
