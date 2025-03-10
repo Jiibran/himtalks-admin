@@ -57,20 +57,30 @@ export async function fetchMessages() {
       throw new Error("Failed to fetch messages");
     }
     
-    // Check if the response is JSON
+    // Handle the response
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.indexOf("application/json") !== -1) {
-      return await response.json();
+      const data = await response.json();
+      
+      // Sanitize date fields if they exist
+      if (Array.isArray(data)) {
+        return data.map(item => ({
+          ...item,
+          // Set default values for missing timestamps and validate existing ones
+          createdAt: item.createdAt ? new Date(item.createdAt).getTime() ? item.createdAt : null : null,
+          updatedAt: item.updatedAt ? new Date(item.updatedAt).getTime() ? item.updatedAt : null : null,
+        }));
+      }
+      
+      return data;
     } else {
-      // Handle text response
       const text = await response.text();
       console.log("Received text response:", text);
-      // Return empty array or default structure
-      return { messages: [] };
+      return [];
     }
   } catch (error) {
     console.error("Error fetching messages:", error);
-    throw error;
+    return []; // Return empty array instead of throwing
   }
 }
 

@@ -34,7 +34,7 @@ export default function AppSidebar() {
             <SidebarMenuItem>
               <div className="flex items-center gap-3 px-3 py-2">
                 <Avatar>
-                  <AvatarImage src={user.picture || "/placeholder.svg?height=40&width=40"} alt={user.name || user.email} />
+                  <AvatarImage src={user.picture ?? "/placeholder.svg?height=40&width=40"} alt={user.name || user.email || ""} />
                   <AvatarFallback>{(user.name || user.email)?.charAt(0) || "U"}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">

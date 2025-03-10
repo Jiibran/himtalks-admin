@@ -7,6 +7,7 @@ import SongfessList from "@/components/songfess-list"
 import { useWebSocket } from "@/hooks/use-websocket"
 import { fetchSongfess } from "@/services/api"
 import { useAuth } from "@/components/auth-provider"
+import { formatDistanceToNow } from "date-fns"
 
 export default function SongfessPage() {
   const [songfess, setSongfess] = useState<Songfess[]>([])
@@ -53,6 +54,23 @@ export default function SongfessPage() {
   // Handle songfess deletion
   const handleDeleteSongfess = (id: string) => {
     setSongfess((prev) => prev.filter((item) => item.id !== id))
+  }
+
+  // Add this helper function
+  const formatSafeDate = (dateString: string | number | Date | null | undefined) => {
+    if (!dateString) return "Unknown time";
+    
+    try {
+      const date = new Date(dateString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return "Invalid date";
+      }
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      return "Invalid date";
+    }
   }
 
   return (

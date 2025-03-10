@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation"
 type User = {
   id: string
   name: string
-  email?: string
-  picture?: string
+  email?: string | null
+  picture?: null
   isAdmin?: boolean
   // other user properties
 }
@@ -52,16 +52,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const text = await response.text()
           console.log("Auth successful with text response:", text)
           
-          // Try to extract user info or set default
-          // If the text starts with "Welcome, " followed by a name, try to extract it
-          let name = "Admin"
-          const welcomeMatch = text.match(/Welcome,\s+(\w+)/i)
+          // Extract email from welcome message
+          let name = "Admin";
+          let email = null;
+          const welcomeMatch = text.match(/Welcome,\s+([\w.@]+)!/i);
           if (welcomeMatch && welcomeMatch[1]) {
-            name = welcomeMatch[1]
+            email = welcomeMatch[1];
+            // Get name part before @ if it's an email
+            name = email.includes('@') ? email.split('@')[0] : email;
           }
-          
-          setUser({ id: "1", name })
-          setIsAuthenticated(true)
+
+          setUser({ 
+            id: "1", 
+            name,
+            email,
+            isAdmin: true, // Set based on your needs
+            picture: null // Set default picture
+          });
+          setIsAuthenticated(true);
         }
       } else {
         setUser(null)

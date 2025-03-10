@@ -7,6 +7,7 @@ import MessageList from "@/components/message-list"
 import { useWebSocket } from "@/hooks/use-websocket"
 import { fetchMessages } from "@/services/api"
 import { useAuth } from "@/components/auth-provider"
+import { formatDistanceToNow } from "date-fns";
 
 export default function MessagesPage() {
   const [messages, setMessages] = useState<Message[]>([])
@@ -53,6 +54,23 @@ export default function MessagesPage() {
   // Handle message deletion
   const handleDeleteMessage = (id: string) => {
     setMessages((prev) => prev.filter((message) => message.id !== id))
+  }
+
+  // Add this helper function
+  const formatSafeDate = (dateString: string | number | Date | null | undefined) => {
+    if (!dateString) return "Unknown time";
+    
+    try {
+      const date = new Date(dateString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return "Invalid date";
+      }
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      return "Invalid date";
+    }
   }
 
   return (
