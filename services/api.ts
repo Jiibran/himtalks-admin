@@ -147,7 +147,7 @@ export async function fetchSongfess() {
 
 export async function fetchSongfessById(id: string) {
   try {
-    const response = await fetch(`${API_BASE}/api/songfess/${id}`, {
+    const response = await fetch(`${API_BASE}/songfess/${id}`, {
       credentials: "include",
       headers: {
         "Accept": "application/json"
