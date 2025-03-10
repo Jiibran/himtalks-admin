@@ -1,9 +1,8 @@
 export interface Message {
-  id: string
-  sender: string
+  id: number | string
   content: string
-  timestamp: string
-  avatar?: string
-  attachment?: string
+  sender_name: string
+  recipient_name: string
+  category?: string
+  created_at: string
 }
-

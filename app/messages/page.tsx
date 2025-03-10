@@ -23,9 +23,11 @@ export default function MessagesPage() {
     try {
       setLoading(true)
       // Refresh auth status before making the request
-      await refreshAuthStatus()
+      if (refreshAuthStatus) {
+        await refreshAuthStatus()
+      }
       const data = await fetchMessages()
-      setMessages(data)
+      setMessages(Array.isArray(data) ? data : [])
       setError(null)
     } catch (err) {
       console.error("Error fetching messages:", err)
@@ -43,8 +45,16 @@ export default function MessagesPage() {
   useEffect(() => {
     if (lastMessage) {
       try {
-        const newMessage = JSON.parse(lastMessage.data)
-        setMessages((prev) => [newMessage, ...prev])
+        let newMessage;
+        if (typeof lastMessage === 'string') {
+          newMessage = JSON.parse(lastMessage);
+        } else if (lastMessage.data) {
+          newMessage = JSON.parse(lastMessage.data);
+        }
+        
+        if (newMessage) {
+          setMessages((prev) => [newMessage, ...prev])
+        }
       } catch (err) {
         console.error("Error parsing WebSocket message:", err)
       }
@@ -53,7 +63,7 @@ export default function MessagesPage() {
 
   // Handle message deletion
   const handleDeleteMessage = (id: string) => {
-    setMessages((prev) => prev.filter((message) => message.id !== id))
+    setMessages((prev) => prev.filter((message) => message.id.toString() !== id))
   }
 
   // Add this helper function
@@ -78,7 +88,7 @@ export default function MessagesPage() {
       <Card>
         <CardHeader>
           <CardTitle>Messages</CardTitle>
-          <CardDescription>View and manage your messages</CardDescription>
+          <CardDescription>View and manage all user messages</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (

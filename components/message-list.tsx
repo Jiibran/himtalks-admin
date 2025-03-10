@@ -3,7 +3,6 @@
 import type { Message } from "@/types/message"
 import { Card, CardContent, CardDescription, CardFooter } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { formatDistanceToNow } from "date-fns"
 import { Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
@@ -11,24 +10,7 @@ import { deleteMessage } from "@/services/api"
 import { useAuth } from "@/components/auth-provider"
 import { useToast } from "@/hooks/use-toast"
 import { useLoginModal } from "@/hooks/use-login-modal"
-
-const formatSafeDate = (dateString: string | number | Date | null | undefined) => {
-  if (!dateString) return "Unknown time";
-  
-  try {
-    const date = typeof dateString === 'number'
-      ? new Date(dateString)
-      : new Date(String(dateString));
-      
-    if (isNaN(date.getTime())) {
-      return "Invalid date";
-    }
-    return formatDistanceToNow(date, { addSuffix: true });
-  } catch (error) {
-    console.error("Date formatting error:", error);
-    return "Invalid date";
-  }
-}
+import { formatSafeDate, formatExactDate } from "@/lib/date-utils"
 
 interface MessageListProps {
   messages: Message[]
@@ -41,13 +23,9 @@ export default function MessageList({ messages, onDelete }: MessageListProps) {
   const { toast } = useToast()
   const { showLoginModal } = useLoginModal()
 
-  if (messages.length === 0) {
-    return <div className="text-center py-8">No messages found</div>
-  }
-
   const handleDelete = async (id: string) => {
     if (!isAuthenticated) {
-      showLoginModal("You need to sign in to delete messages")
+      showLoginModal()
       return
     }
 
@@ -56,16 +34,16 @@ export default function MessageList({ messages, onDelete }: MessageListProps) {
       await deleteMessage(id)
       onDelete(id)
       toast({
-        title: "Success",
-        description: "Message deleted successfully",
+        title: "Message deleted",
+        description: "The message has been successfully deleted."
       })
     } catch (error) {
+      console.error("Failed to delete message:", error)
       toast({
         title: "Error",
-        description: "Failed to delete message",
-        variant: "destructive",
+        description: "Failed to delete message. Please try again.",
+        variant: "destructive"
       })
-      console.error("Error deleting message:", error)
     } finally {
       setDeletingId(null)
     }
@@ -73,54 +51,52 @@ export default function MessageList({ messages, onDelete }: MessageListProps) {
 
   return (
     <div className="space-y-4">
-      {messages.map((message) => (
-        <Card key={message.id} className="overflow-hidden">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-4">
-              <Avatar>
-                <AvatarImage src={message.avatar || "/placeholder.svg?height=40&width=40"} alt={message.sender} />
-                <AvatarFallback>{message.sender.charAt(0)}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold">{message.sender}</h3>
-                    <CardDescription>
-                      {formatSafeDate(message.timestamp)}
-                    </CardDescription>
+      {messages.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">No messages found.</div>
+      ) : (
+        messages.map((message) => (
+          <Card key={message.id} className="overflow-hidden">
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex items-center space-x-4">
+                  <Avatar>
+                    <AvatarFallback>{message.sender_name?.[0] || '?'}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-medium">{message.sender_name || "Anonymous"}</p>
+                    <p className="text-sm text-muted-foreground">
+                      To: {message.recipient_name || "Unknown"}
+                    </p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(message.id)}
-                    disabled={deletingId === message.id}
-                    className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-100"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Delete message</span>
-                  </Button>
                 </div>
-                <p className="text-sm">{message.content}</p>
+                <div className="text-sm text-muted-foreground" title={formatExactDate(message.created_at)}>
+                  {formatSafeDate(message.created_at)}
+                </div>
               </div>
-            </div>
-          </CardContent>
-          {message.attachment && (
-            <CardFooter className="p-4 pt-0">
-              <div className="text-xs text-muted-foreground flex items-center gap-2">
-                <span>Attachment:</span>
-                <a
-                  href={message.attachment}
-                  className="text-blue-500 hover:underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
+              <div className="mt-4 space-y-2">
+                <p className="text-sm">{message.content}</p>
+                {message.category && (
+                  <p className="text-xs text-muted-foreground">Category: {message.category}</p>
+                )}
+              </div>
+            </CardContent>
+            <CardFooter className="bg-muted/50 p-2">
+              <div className="flex w-full justify-end">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                  onClick={() => handleDelete(message.id.toString())}
+                  disabled={deletingId === message.id.toString()}
                 >
-                  View attachment
-                </a>
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  {deletingId === message.id.toString() ? "Deleting..." : "Delete"}
+                </Button>
               </div>
             </CardFooter>
-          )}
-        </Card>
-      ))}
+          </Card>
+        ))
+      )}
     </div>
   )
 }

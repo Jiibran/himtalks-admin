@@ -23,9 +23,11 @@ export default function SongfessPage() {
     try {
       setLoading(true)
       // Refresh auth status before making the request
-      await refreshAuthStatus()
+      if (refreshAuthStatus) {
+        await refreshAuthStatus()
+      }
       const data = await fetchSongfess()
-      setSongfess(data)
+      setSongfess(Array.isArray(data) ? data : [])
       setError(null)
     } catch (err) {
       console.error("Error fetching songfess:", err)
@@ -43,8 +45,16 @@ export default function SongfessPage() {
   useEffect(() => {
     if (lastMessage) {
       try {
-        const newSongfess = JSON.parse(lastMessage.data)
-        setSongfess((prev) => [newSongfess, ...prev])
+        let newSongfess;
+        if (typeof lastMessage === 'string') {
+          newSongfess = JSON.parse(lastMessage);
+        } else if (lastMessage.data) {
+          newSongfess = JSON.parse(lastMessage.data);
+        }
+        
+        if (newSongfess) {
+          setSongfess((prev) => [newSongfess, ...prev])
+        }
       } catch (err) {
         console.error("Error parsing WebSocket message:", err)
       }
@@ -53,7 +63,7 @@ export default function SongfessPage() {
 
   // Handle songfess deletion
   const handleDeleteSongfess = (id: string) => {
-    setSongfess((prev) => prev.filter((item) => item.id !== id))
+    setSongfess((prev) => prev.filter((item) => item.id.toString() !== id))
   }
 
   // Add this helper function
